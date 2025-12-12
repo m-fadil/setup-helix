@@ -9,6 +9,25 @@ HELIX_SHARE_DIR="/usr/local/share/helix"
 HELIX_RUNTIME_DIR="$HELIX_SHARE_DIR/runtime"
 REPO_URL="https://github.com/m-fadil/setup-helix.git"
 
+# Deteksi apakah perlu sudo atau tidak
+if [ "$EUID" -eq 0 ]; then
+  # Running as root, tidak perlu sudo
+  SUDO=""
+else
+  # Not root, cek apakah sudo tersedia
+  if command -v sudo &> /dev/null; then
+    SUDO="sudo"
+  else
+    echo ""
+    echo "[ERROR] Script ini memerlukan akses root untuk instalasi ke /usr/local"
+    echo "Opsi:"
+    echo "  1. Install sudo: apt-get install sudo (Debian/Ubuntu) atau yum install sudo (RHEL/CentOS)"
+    echo "  2. Jalankan sebagai root: su -c './install-helix.sh'"
+    echo ""
+    exit 1
+  fi
+fi
+
 # Setup temporary directories dan cleanup trap
 TARBALL_TEMP_DIR=$(mktemp -d)
 CONFIG_TEMP_DIR=$(mktemp -d)
@@ -39,8 +58,8 @@ curl -L -o "$HX_TEMP_FILE" "$HX_URL"
 echo "   -> Mengatur permission executable"
 chmod +x "$HX_TEMP_FILE"
 
-echo "   -> Memindahkan ke /usr/local/bin (memerlukan sudo)"
-sudo mv "$HX_TEMP_FILE" /usr/local/bin/hx
+echo "   -> Memindahkan ke /usr/local/bin (memerlukan akses root)"
+$SUDO mv "$HX_TEMP_FILE" /usr/local/bin/hx
 
 echo "   [OK] hx binary berhasil diinstal"
 echo ""
@@ -64,11 +83,11 @@ else
 fi
 
 echo "   -> Menyiapkan direktori $HELIX_SHARE_DIR"
-sudo mkdir -p "$HELIX_SHARE_DIR"
+$SUDO mkdir -p "$HELIX_SHARE_DIR"
 
 echo "   -> Memindahkan runtime ke $HELIX_RUNTIME_DIR"
-sudo rm -rf "$HELIX_RUNTIME_DIR"
-sudo mv "$RUNTIME_SRC" "$HELIX_RUNTIME_DIR"
+$SUDO rm -rf "$HELIX_RUNTIME_DIR"
+$SUDO mv "$RUNTIME_SRC" "$HELIX_RUNTIME_DIR"
 
 echo "   [OK] Helix runtime berhasil diinstal"
 echo ""
