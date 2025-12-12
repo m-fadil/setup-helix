@@ -1,0 +1,12 @@
+[[language]]
+name = "python"
+language-servers = ["pyright"]
+
+[[language]]
+name = "javascript"
+language-servers = ["typescript-language-server"]
+
+[[language]]
+name = "yaml"
+language-servers = ["yaml-language-server"]
+file-types = ["yml", "yaml"]

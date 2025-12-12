@@ -1,0 +1,8 @@
+__pycache__
+node_modules
+dist
+sites/assets
+sites/*.log
+logs
+env
+venv

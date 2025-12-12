@@ -1,0 +1,16 @@
+theme = "onedark"
+
+[editor]
+true-color = true
+
+[editor.cursor-shape]
+insert = "bar"
+normal = "block"
+select = "underline"
+
+[editor.file-picker]
+git-ignore = false
+git-global = false
+
+[keys.insert]
+tab = "insert_tab"
