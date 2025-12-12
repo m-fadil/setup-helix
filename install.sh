@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Konfigurasi URL & path
+# Configuration: URLs & paths
 HX_URL="https://github.com/m-fadil/setup-helix/releases/download/v1.0.0/hx"
 HELIX_TARBALL_URL="https://github.com/helix-editor/helix/releases/download/25.07.1/helix-25.07.1-x86_64-linux.tar.xz"
 HELIX_TARBALL="helix-25.07.1-x86_64-linux.tar.xz"
@@ -9,8 +9,8 @@ HELIX_SHARE_DIR="/usr/local/share/helix"
 HELIX_RUNTIME_DIR="$HELIX_SHARE_DIR/runtime"
 REPO_URL="https://github.com/m-fadil/setup-helix.git"
 
-# Cek dependensi yang diperlukan
-echo "Memeriksa dependensi..."
+# Check required dependencies
+echo "Checking dependencies..."
 MISSING_DEPS=()
 
 if ! command -v curl &> /dev/null; then
@@ -22,17 +22,17 @@ if ! command -v git &> /dev/null; then
 fi
 
 if ! command -v xz &> /dev/null; then
-  MISSING_DEPS+=("xz-utils atau xz")
+  MISSING_DEPS+=("xz-utils or xz")
 fi
 
 if [ ${#MISSING_DEPS[@]} -gt 0 ]; then
   echo ""
-  echo "[ERROR] Dependensi berikut belum terinstall:"
+  echo "[ERROR] The following dependencies are not installed:"
   for dep in "${MISSING_DEPS[@]}"; do
     echo "  - $dep"
   done
   echo ""
-  echo "Cara install dependensi:"
+  echo "How to install dependencies:"
   echo ""
   echo "Debian/Ubuntu:"
   echo "  apt-get update && apt-get install -y curl git xz-utils"
@@ -49,26 +49,26 @@ if [ ${#MISSING_DEPS[@]} -gt 0 ]; then
   exit 1
 fi
 
-# Deteksi apakah perlu sudo atau tidak
+# Detect if sudo is needed
 if [ "$EUID" -eq 0 ]; then
-  # Running as root, tidak perlu sudo
+  # Running as root, no sudo needed
   SUDO=""
 else
-  # Not root, cek apakah sudo tersedia
+  # Not root, check if sudo is available
   if command -v sudo &> /dev/null; then
     SUDO="sudo"
   else
     echo ""
-    echo "[ERROR] Script ini memerlukan akses root untuk instalasi ke /usr/local"
-    echo "Opsi:"
-    echo "  1. Install sudo: apt-get install sudo (Debian/Ubuntu) atau yum install sudo (RHEL/CentOS)"
-    echo "  2. Jalankan sebagai root: su -c './install-helix.sh'"
+    echo "[ERROR] This script requires root access to install to /usr/local"
+    echo "Options:"
+    echo "  1. Install sudo: apt-get install sudo (Debian/Ubuntu) or yum install sudo (RHEL/CentOS)"
+    echo "  2. Run as root: su -c './install-helix.sh'"
     echo ""
     exit 1
   fi
 fi
 
-# Setup temporary directories dan cleanup trap
+# Setup temporary directories and cleanup trap
 TARBALL_TEMP_DIR=$(mktemp -d)
 CONFIG_TEMP_DIR=$(mktemp -d)
 HX_TEMP_FILE=$(mktemp)
@@ -76,112 +76,112 @@ HX_TEMP_FILE=$(mktemp)
 # Cleanup function
 cleanup() {
   echo ""
-  echo "   -> Membersihkan temporary files..."
+  echo "   -> Cleaning up temporary files..."
   rm -rf "$TARBALL_TEMP_DIR" "$CONFIG_TEMP_DIR" "$HX_TEMP_FILE"
 }
 
-# Register cleanup untuk dijalankan saat exit (normal atau error)
+# Register cleanup to run on exit (normal or error)
 trap cleanup EXIT
 
 echo ""
 echo "=========================================="
-echo "  INSTALASI HELIX EDITOR"
+echo "  HELIX EDITOR INSTALLATION"
 echo "=========================================="
 echo ""
 
-# ==================== INSTALASI HX BINARY ====================
-echo "[1/5] Mengunduh dan menginstal hx binary..."
+# ==================== INSTALL HX BINARY ====================
+echo "[1/5] Downloading and installing hx binary..."
 
-echo "   -> Mengunduh hx dari GitHub releases"
+echo "   -> Downloading hx from GitHub releases"
 curl -L -o "$HX_TEMP_FILE" "$HX_URL"
 
-echo "   -> Mengatur permission executable"
+echo "   -> Setting executable permission"
 chmod +x "$HX_TEMP_FILE"
 
-echo "   -> Memindahkan ke /usr/local/bin (memerlukan akses root)"
+echo "   -> Moving to /usr/local/bin (requires root access)"
 $SUDO mv "$HX_TEMP_FILE" /usr/local/bin/hx
 
-echo "   [OK] hx binary berhasil diinstal"
+echo "   [OK] hx binary successfully installed"
 echo ""
 
-# ==================== INSTALASI HELIX RUNTIME ====================
-echo "[2/5] Mengunduh dan menginstal Helix runtime..."
+# ==================== INSTALL HELIX RUNTIME ====================
+echo "[2/5] Downloading and installing Helix runtime..."
 
-echo "   -> Mengunduh Helix tarball (25.07.1)"
+echo "   -> Downloading Helix tarball (25.07.1)"
 curl -L -o "$TARBALL_TEMP_DIR/$HELIX_TARBALL" "$HELIX_TARBALL_URL"
 
-echo "   -> Mengekstrak tarball"
+echo "   -> Extracting tarball"
 tar xf "$TARBALL_TEMP_DIR/$HELIX_TARBALL" -C "$TARBALL_TEMP_DIR"
 
-echo "   -> Mencari folder runtime"
+echo "   -> Looking for runtime folder"
 if [ -d "$TARBALL_TEMP_DIR/helix-25.07.1-x86_64-linux/runtime" ]; then
   RUNTIME_SRC="$TARBALL_TEMP_DIR/helix-25.07.1-x86_64-linux/runtime"
 else
   echo ""
-  echo "[ERROR] Folder 'runtime' tidak ditemukan setelah ekstraksi"
+  echo "[ERROR] 'runtime' folder not found after extraction"
   exit 1
 fi
 
-echo "   -> Menyiapkan direktori $HELIX_SHARE_DIR"
+echo "   -> Preparing directory $HELIX_SHARE_DIR"
 $SUDO mkdir -p "$HELIX_SHARE_DIR"
 
-echo "   -> Memindahkan runtime ke $HELIX_RUNTIME_DIR"
+echo "   -> Moving runtime to $HELIX_RUNTIME_DIR"
 $SUDO rm -rf "$HELIX_RUNTIME_DIR"
 $SUDO mv "$RUNTIME_SRC" "$HELIX_RUNTIME_DIR"
 
-echo "   [OK] Helix runtime berhasil diinstal"
+echo "   [OK] Helix runtime successfully installed"
 echo ""
 
-# ==================== SETUP KONFIGURASI LOKAL ====================
-echo "[3/5] Menyiapkan konfigurasi lokal..."
+# ==================== SETUP LOCAL CONFIGURATION ====================
+echo "[3/5] Setting up local configuration..."
 
-echo "   -> Membuat direktori ~/.config/helix"
+echo "   -> Creating directory ~/.config/helix"
 mkdir -p "$HOME/.config/helix"
 
-echo "   -> Membuat symlink runtime ke ~/.config/helix/runtime"
+echo "   -> Creating symlink runtime to ~/.config/helix/runtime"
 if [ -L "$HOME/.config/helix/runtime" ] || [ -d "$HOME/.config/helix/runtime" ]; then
   rm -rf "$HOME/.config/helix/runtime"
 fi
 ln -s "$HELIX_RUNTIME_DIR" "$HOME/.config/helix/runtime"
 
-echo "   [OK] Konfigurasi lokal berhasil disiapkan"
+echo "   [OK] Local configuration successfully set up"
 echo ""
 
 # ==================== CLONE & APPLY CUSTOM CONFIG ====================
-echo "[4/5] Mengambil dan menerapkan konfigurasi custom..."
+echo "[4/5] Fetching and applying custom configuration..."
 
-echo "   -> Cloning repository konfigurasi"
-echo "      Dari: $REPO_URL"
+echo "   -> Cloning configuration repository"
+echo "      From: $REPO_URL"
 git clone "$REPO_URL" "$CONFIG_TEMP_DIR" --quiet
 
-echo "   -> Memeriksa folder 'config' di repository"
+echo "   -> Checking for 'config' folder in repository"
 if [ -d "$CONFIG_TEMP_DIR/config/helix" ]; then
-  echo "   -> Menyalin dan mengganti konfigurasi ke ~/.config/helix"
+  echo "   -> Copying and replacing configuration to ~/.config/helix"
   cp -rf "$CONFIG_TEMP_DIR/config/helix/"* "$HOME/.config/helix/"
-  echo "   [OK] Konfigurasi custom berhasil diterapkan"
+  echo "   [OK] Custom configuration successfully applied"
 else
-  echo "   [WARNING] Folder 'config/helix' tidak ditemukan di repository"
+  echo "   [WARNING] 'config/helix' folder not found in repository"
 fi
 echo ""
 
 # ==================== CLEANUP ====================
-echo "[5/5] Membersihkan file temporary..."
-echo "   [OK] Cleanup akan otomatis dijalankan saat script selesai"
+echo "[5/5] Cleaning up temporary files..."
+echo "   [OK] Cleanup will run automatically when script finishes"
 echo ""
 
-# ==================== SELESAI ====================
+# ==================== DONE ====================
 echo "=========================================="
-echo "  INSTALASI BERHASIL!"
+echo "  INSTALLATION SUCCESSFUL!"
 echo "=========================================="
 echo ""
-echo "Lokasi instalasi:"
+echo "Installation locations:"
 echo "   * Binary     : /usr/local/bin/hx"
 echo "   * Runtime    : $HELIX_RUNTIME_DIR"
 echo "   * Config     : ~/.config/helix"
 echo ""
-echo "Verifikasi instalasi:"
+echo "Verify installation:"
 echo "   $ hx --version"
 echo ""
-echo "Mulai menggunakan Helix:"
-echo "   $ hx <nama-file>"
+echo "Start using Helix:"
+echo "   $ hx <filename>"
 echo ""
