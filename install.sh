@@ -9,6 +9,46 @@ HELIX_SHARE_DIR="/usr/local/share/helix"
 HELIX_RUNTIME_DIR="$HELIX_SHARE_DIR/runtime"
 REPO_URL="https://github.com/m-fadil/setup-helix.git"
 
+# Cek dependensi yang diperlukan
+echo "Memeriksa dependensi..."
+MISSING_DEPS=()
+
+if ! command -v curl &> /dev/null; then
+  MISSING_DEPS+=("curl")
+fi
+
+if ! command -v git &> /dev/null; then
+  MISSING_DEPS+=("git")
+fi
+
+if ! command -v xz &> /dev/null; then
+  MISSING_DEPS+=("xz-utils atau xz")
+fi
+
+if [ ${#MISSING_DEPS[@]} -gt 0 ]; then
+  echo ""
+  echo "[ERROR] Dependensi berikut belum terinstall:"
+  for dep in "${MISSING_DEPS[@]}"; do
+    echo "  - $dep"
+  done
+  echo ""
+  echo "Cara install dependensi:"
+  echo ""
+  echo "Debian/Ubuntu:"
+  echo "  apt-get update && apt-get install -y curl git xz-utils"
+  echo ""
+  echo "RHEL/CentOS/Fedora:"
+  echo "  yum install -y curl git xz"
+  echo ""
+  echo "Arch Linux:"
+  echo "  pacman -S curl git xz"
+  echo ""
+  echo "Alpine Linux:"
+  echo "  apk add curl git xz"
+  echo ""
+  exit 1
+fi
+
 # Deteksi apakah perlu sudo atau tidak
 if [ "$EUID" -eq 0 ]; then
   # Running as root, tidak perlu sudo
